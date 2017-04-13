@@ -26,11 +26,10 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    accountmanager.cpp \
-    dbmanager.cpp
+    accountmanager.cpp
 
 HEADERS  += mainwindow.h \
     accountmanager.h \
-    dbmanager.h
+    initdb.h
 
 FORMS    += mainwindow.ui
