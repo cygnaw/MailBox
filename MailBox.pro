@@ -26,10 +26,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    accountmanager.cpp
+    accountmanager.cpp \
+    lib/pop3.cpp \
+    lib/smtp.cpp
 
 HEADERS  += mainwindow.h \
     accountmanager.h \
-    initdb.h
+    initdb.h \
+    lib/pop3.h \
+    lib/smtp.h
 
 FORMS    += mainwindow.ui
