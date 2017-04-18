@@ -21,11 +21,13 @@ QSqlError initDb() {
     if (!q.exec(QLatin1String("PRAGMA foreign_keys = ON;")))
         return q.lastError();
     // create table accout
-    if (!q.exec(QLatin1String("create table if not exists accout("
-                              "username text primary key not null unique,"
-                              "password text             not null,"
-                              "u_base64 text             not null,"
-                              "p_base64 text             not null,"
+    if (!q.exec(QLatin1String("create table if not exists account("
+                              "username     text primary key    not null unique,"
+                              "password     text                not null,"
+                              "pop_server   text                not null,"
+                              "pop_port     integer             not null,"
+                              "smtp_server  text                not null,"
+                              "smtp_port    integer             not null,"
                               "check (username like '%@%.%')"
                               ");")))
         return q.lastError();
@@ -48,6 +50,8 @@ QSqlError initDb() {
                               "foreign key(m_id) references mail_info(m_id)"
                               ");")))
         return q.lastError();
+
+    return QSqlError();
 }
 
 #endif // INITDB_H

@@ -1,17 +1,13 @@
-#include "mainwindow.h"
-#include "dbmanager.h"
+//#include "mainwindow.h"
 #include "initdb.h"
 #include <QApplication>
+#include <QTableView>
 
 int main(int argc, char *argv[])
 {
-//    QApplication a(argc, argv);
+    QApplication a(argc, argv);
 //    MainWindow w;
 //    w.show();
 
-//    return a.exec();
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName(":memory:");
-    qDebug() << QSqlDriver::hasFeature(QSqlDriver::Transactions);
-    return 0;
+    return a.exec();
 }
