@@ -163,7 +163,7 @@ void Pop3::close() {
 
 // optinal commands
 bool Pop3::apop(const QString &user, const QString &password, QString &resp) {
-    // not implement
+    // not implemented
     return false;
 }
 
