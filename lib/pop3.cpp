@@ -1,6 +1,10 @@
 #include "pop3.h"
 
-Pop3::Pop3(QString host, int port, int timeout):
+#define CR "\r"
+#define LF "\n"
+#define CRLF CR LF
+
+Pop3::Pop3(QString const &host, int port):
     tcpSocket(new QTcpSocket),
     debugging(0)
 {
@@ -16,14 +20,15 @@ Pop3::~Pop3() {
 }
 
 // Private
-void Pop3::putline(QString line) {
+void Pop3::putline(const QString &line) {
     if (debugging > 1)
         qDebug() << "*put*" << line;
-    tcpSocket->write(line + CRLF);
+    tcpSocket->write(line.toUtf8());
+    tcpSocket->write(CRLF);
 }
 
 // Private: send one command to the server (through putline())
-void Pop3::putcmd(QString line) {
+void Pop3::putcmd(const QString &line) {
     if (debugging)
         qDebug() << "*cmd*" << line;
     putline(line);
@@ -31,62 +36,66 @@ void Pop3::putcmd(QString line) {
 
 // Private: return one line from the server, stripping CRLF.
 // This is where algl the CPU time of this module is consumed.
-pair<QString, int> Pop3::getline() {
+void Pop3::getline(QString &line, int &octets) {
     if (!tcpSocket->canReadLine())
         tcpSocket->waitForReadyRead();
-    QString line = tcpSocket->readLine(MAXLINE + 1);
+    line = tcpSocket->readLine(MAXLINE + 1);
 
     if (debugging > 1)
         qDebug() << "*get*" << line;
-    int octets = line.size();
+    octets = line.size();
 
     // server can send any combination of CR & LF
     // however, 'readline()' returns lines ending in LF
     // so only possibilities are ...LF, ...CRLF, CR...LF
-    if (line.endsWith(CRLF)) {
-        return pair<QString, int>(line.mid(0, octets-2), octets);
-    }
-    if (line.startsWith(CR))
-        return pair<QString, int>(line.mid(1, octets-2), octets);
-    return pair<QString, int>(line.mid(0, octets-1), octets);
+    if (line.endsWith(CRLF))
+        line.chop(2);
+    else if (line.startsWith(CR))
+        line = line.mid(1, octets-2);
+    else
+        line.chop(1);
 }
 
 // Internal: get a response from the server.
-QString Pop3::getresp() {
-    pair<QString, int> resp = getline();
+void Pop3::getresp(QString& resp) {
+    int octets;
+    getline(resp, octets);
     if (debugging > 1)
-        qDebug() << "*resp*" << resp.first;
-    return resp.first;
+        qDebug() << "*resp*" << resp;
 }
 
 // Private: get a response plus following text from the server.
-tuple<QString, QStringList, int> Pop3::getlongresp() {
-    QString resp = getresp();
-    QStringList list;
-    int octets = 0;
-    pair<QString, int> tmp = getline();
-    while (tmp.first != ".") {
-        if (tmp.first.startsWith("..")) {
-            --tmp.second;
-            tmp.first.remove(0, 1);
+void Pop3::getlongresp(QString &resp, QStringList &list, int &octets) {
+    getresp(resp);
+    list.clear();
+    octets = 0;
+
+    QString line;
+    int o;
+    getline(line, o);
+    while (line != ".") {
+        if (line.startsWith("..")) {
+            --o;
+            line.remove(0, 1);
         }
-        octets += tmp.second;
-        list << tmp.first;
-        tmp = getline();
+        octets += o;
+        list << line;
+        getline(line, o);
     }
-    return tuple<QString, list, int>(resp, list, octets);
 }
 
 // Private: send a command and get the response
-QString Pop3::shortcmd(line) {
+bool Pop3::shortcmd(const QString &line, QString &resp) {
     putcmd(line);
-    return getresp();
+    getresp(resp);
+    return resp.startsWith(QLatin1String("+OK"), Qt::CaseInsensitive);
 }
 
 // Private: send a command and get the response plus following text
-tuple<QString, QStringList, int> Pop3::longcmd(line) {
+bool Pop3::longcmd(const QString &line, QString &resp, QStringList &list, int &octets) {
     putcmd(line);
-    return getlongresp();
+    getlongresp(resp, list, octets);
+    return resp.startsWith(QLatin1String("+OK"), Qt::CaseInsensitive);
 }
 
 // These are public functions
@@ -95,50 +104,77 @@ QString Pop3::getwelcome() {
     return welcome;
 }
 
-QString Pop3::QUIT() {
-    tcpSocket->write("QUIT\r\n");
-    tcpSocket->waitForReadyRead();
-    return tcpSocket->readLine();
+void Pop3::set_debuglevel(int level) {
+    debugging = level;
 }
 
-pair<int, int> Pop3::STAT() {
-    tcpSocket->write("STAT\r\n");
-    tcpSocket->waitForReadyRead();
-    QString message = tcpSocket->readLine();
-    QStringList list = message.split(' ', QString::SkipEmptyParts);
-    return pair(list[1].toInt(), list[2].toInt());
+bool Pop3::user(const QString &username, QString &resp) {
+    return shortcmd(QString("USER %1").arg(username), resp);
 }
 
-QString Pop3::LIST(int which) {
-    tcpSocket->write(QString("LIST %1" CRLF).arg(which));
-    tcpSocket->waitForReadyRead();
-    return tcpSocket->readLine();
+bool Pop3::pass(const QString &password, QString &resp) {
+    return shortcmd(QString("PASS %1").arg(password), resp);
 }
 
-pair<QString, QStringList> Pop3::LIST() {
-    tcpSocket->write("LIST" CRLF);
-    tcpSocket->waitForReadyRead();
-    QString stat = tcpSocket->readLine();
-    tcpSocket->waitForReadyRead();
-    return pair(stat, readMultipleLine());
+bool Pop3::stat(int &num, int &size) {
+    QString retval;
+    bool ok = shortcmd(QLatin1String("STAT"), retval);
+    QStringList rets = retval.split(' ', QString::SkipEmptyParts);
+    if (debugging)
+        qDebug() << "*stat*" << rets;
+    num = rets[1].toInt();
+    size = rets[2].toInt();
+    return ok;
 }
 
-QString Pop3::USER(QString username) {
-    tcpSocket->write(QString("USER %1\r\n").arg(username));
-    tcpSocket->waitForReadyRead();
-    return tcpSocket->readLine();
+bool Pop3::list(QString &resp, QStringList &list, int &octets) {
+    return longcmd(QLatin1String("LIST"), resp, list, octets);
 }
 
-QString Pop3::PASS(QString password) {
-    tcpSocket->write(QString("PASS %1\r\n").arg(password));
-    tcpSocket->waitForReadyRead();
-    return tcpSocket->readLine();
+bool Pop3::list(int which, QString &resp) {
+    return shortcmd(QString("LIST %1").arg(which), resp);
 }
 
-QStringList Pop3::readMultipleLine() {
-    QStringList result;
-    QString line;
-    forever {
-        line = tcpSocket->readLine()
-    }
+bool Pop3::retr(int which, QString &resp, QStringList &list, int &octets) {
+    return longcmd(QString("RETR %1").arg(which), resp, list, octets);
+}
+
+bool Pop3::dele(int which, QString &resp) {
+    return shortcmd(QString("DELE %1").arg(which), resp);
+}
+
+bool Pop3::noop(QString &resp) {
+    return shortcmd(QLatin1String("NOOP"), resp);
+}
+
+bool Pop3::rset(QString &resp) {
+    return shortcmd(QLatin1String("RSET"), resp);
+}
+
+bool Pop3::quit(QString &resp) {
+    bool ok = shortcmd(QLatin1String("QUIT"), resp);
+    close();
+    return ok;
+}
+
+void Pop3::close() {
+    tcpSocket->close();
+}
+
+// optinal commands
+bool Pop3::apop(const QString &user, const QString &password, QString &resp) {
+    // not implement
+    return false;
+}
+
+bool Pop3::top(int which, int howmuch, QString &resp, QStringList &list, int &octets) {
+    return longcmd(QString("TOP %1 %2").arg(which).arg(howmuch), resp, list, octets);
+}
+
+bool Pop3::uidl(QString &resp, QStringList &list, int &octets) {
+    return longcmd(QLatin1String("UIDL"), resp, list, octets);
+}
+
+bool Pop3::uidl(int which, QString &resp) {
+    return shortcmd(QString("UIDL %1").arg(which), resp);
 }
