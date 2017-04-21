@@ -29,12 +29,15 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     accountmanager.cpp \
     lib/pop3.cpp \
-    lib/smtp.cpp
+    lib/smtp.cpp \
+    sendwindow.cpp
 
 HEADERS  += mainwindow.h \
     accountmanager.h \
     initdb.h \
     lib/pop3.h \
-    lib/smtp.h
+    lib/smtp.h \
+    sendwindow.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    sendwindow.ui

@@ -58,6 +58,7 @@ QSqlError initDb() {
                               "user   text not null,"
                               "folder text not null,"
                               "deleted integer not null,"
+                              "downloaded integer not null,"
                               "sender  text,"
                               "recipient text,"
                               "subject text,"
