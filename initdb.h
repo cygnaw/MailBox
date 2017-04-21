@@ -31,18 +31,40 @@ QSqlError initDb() {
                               "check (username like '%@%.%')"
                               ");")))
         return q.lastError();
-    // create table mail_info
-    if (!q.exec(QLatin1String("create table if not exists mail_info ("
-                              "m_id    integer primary key autoincrement not null,"
-                              "owner   text not null, "
-                              "folder  text not null default 'Inbox',"
+
+    // create table dir
+    if (!q.exec(QLatin1String("create table if not exists dir ("
+                              "user text not null,"
+                              "folder text not null,"
+                              "primary key (user, folder),"
+                              "foreign key (user) references account(username)"
+                              ");")))
+        return q.lastError();
+
+    // create table send_mail
+    if (!q.exec(QLatin1String("create table if not exists send_mail ("
+                              "m_id    integer primary key not null,"
+                              "user   text not null,"
+                              "sended integer not null,"
                               "sender  text,"
                               "recipient text,"
                               "subject text,"
-                              "foreign key(owner) references accout(username),"
-                              "check (folder in ('Inbox', 'Send', 'Draft', 'Spam'))"
+                              "foreign key(user) references account(username)"
                               ");")))
         return q.lastError();
+    // create table receive_mail
+    if (!q.exec(QLatin1String("create table if not exists receive_mail ("
+                              "m_id    integer primary key not null,"
+                              "user   text not null,"
+                              "folder text not null,"
+                              "deleted integer not null,"
+                              "sender  text,"
+                              "recipient text,"
+                              "subject text,"
+                              "foreign key(user, folder) references dir(user, folder)"
+                              ");")))
+        return q.lastError();
+
     // create table mail_body
     if (!q.exec(QLatin1String("create table if not exists mail_body ("
                               "m_id integer primary key not null,"
