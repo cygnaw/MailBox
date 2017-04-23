@@ -18,11 +18,11 @@ public:
     QString getSmtpServer() { return smtp_server; }
     int getSmtpPort() { return smtp_port; }
 
-    void change(const QSqlRecord &record);
+    void change(const QString &username);
     bool modify(const QString &username, const QString &password,
                 const QString &pop_server, int pop_port,
                 const QString &smtp_server, int smtp_port);
-    void remove(QString username, bool withMail);
+    void remove(const QString &username);
 
     static bool validatePop(const QString &user, const QString &pass,
                             const QString &server, int port);
@@ -42,7 +42,7 @@ private:
     AccountManager();
     AccountManager(AccountManager const&) {}
     AccountManager& operator=(AccountManager const&);
-    ~AccountManager();
+    ~AccountManager() {}
 };
 
 #endif // ACCOUNTMANAGER_H
