@@ -85,11 +85,18 @@ bool AccountManager::add(const QString &username, const QString &password,
     if (validatePop(username, password, pop_server, pop_port) &&
             validateSmtp(username, password, smtp_server, smtp_port)) {
         QSqlQuery query;
-        query.exec(QString("INSERT INTO account (username, password, pop3_server, pop3_port,"
+        query.exec(QString("INSERT INTO account (username, password, pop_server, pop_port,"
                            "smtp_server, smtp_port) VALUES ('%1', '%2', '%3', %4, '%5', %6);"
                            ).arg(username, password, pop_server).arg(pop_port).arg(smtp_server).arg(smtp_port));
         query.exec(QString("INSERT INTO dir (user, folder) VALUES ('%1', 'Default');").arg(username));
         return true;
     }
     return false;
+}
+
+bool AccountManager::isEmpty() {
+    QSqlQuery query;
+    query.exec(QLatin1String("SELECT count(*) FROM account;"));
+    query.next();
+    return query.value(0).toInt() == 0;
 }

@@ -31,6 +31,7 @@ public:
     static bool add(const QString &username, const QString &password,
                     const QString &pop_server, int pop_port,
                     const QString &smtp_server, int smtp_port);
+    static bool isEmpty();
 private:
     QString username;
     QString password;
@@ -41,7 +42,7 @@ private:
 
     AccountManager();
     AccountManager(AccountManager const&) {}
-    AccountManager& operator=(AccountManager const&);
+    AccountManager& operator=(AccountManager const&) {}
     ~AccountManager() {}
 };
 

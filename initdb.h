@@ -12,7 +12,9 @@ QSqlError initDb() {
 
     QStringList tables = db.tables();
     if (tables.contains("account", Qt::CaseInsensitive) &&
-            tables.contains("mail_info", Qt::CaseInsensitive) &&
+            tables.contains("dir", Qt::CaseInsensitive) &&
+            tables.contains("send_mail", Qt::CaseInsensitive) &&
+            tables.contains("receive_mail", Qt::CaseInsensitive) &&
             tables.contains("mail_body", Qt::CaseInsensitive))
         return QSqlError();
 
@@ -20,7 +22,7 @@ QSqlError initDb() {
     // open foreign key constraint
     if (!q.exec(QLatin1String("PRAGMA foreign_keys = ON;")))
         return q.lastError();
-    // create table accout
+    // create table account
     if (!q.exec(QLatin1String("create table if not exists account("
                               "username     text primary key    not null unique,"
                               "password     text                not null,"
