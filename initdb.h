@@ -14,8 +14,7 @@ QSqlError initDb() {
     if (tables.contains("account", Qt::CaseInsensitive) &&
             tables.contains("dir", Qt::CaseInsensitive) &&
             tables.contains("send_mail", Qt::CaseInsensitive) &&
-            tables.contains("receive_mail", Qt::CaseInsensitive) &&
-            tables.contains("mail_body", Qt::CaseInsensitive))
+            tables.contains("receive_mail", Qt::CaseInsensitive))
         return QSqlError();
 
     QSqlQuery q;
@@ -45,14 +44,16 @@ QSqlError initDb() {
 
     // create table send_mail
     if (!q.exec(QLatin1String("create table if not exists send_mail ("
-                              "uid    text primary key not null,"
+                              "uid    integer primary key autoincrement,"
                               "user   text not null,"
                               "sended integer not null,"
-                              "from text,"
-                              "to   text,"
+                              "sender text,"
+                              "receiver   text,"
                               "cc   text,"
                               "bcc  text,"
+                              "date text,"
                               "subject text,"
+                              "body text,"
                               "foreign key(user) references account(username) ON DELETE CASCADE"
                               ");")))
         return q.lastError();
@@ -64,20 +65,13 @@ QSqlError initDb() {
                               "folder text not null default 'Default',"
                               "deleted integer not null default 0,"
                               "downloaded integer not null default 0,"
-                              "from text,"
-                              "to   text,"
+                              "sender text,"
+                              "receiver text,"
                               "cc   text,"
                               "subject text,"
                               "date text,"
-                              "foreign key(user, folder) references dir(user, folder) ON DELETE CASCADE"
-                              ");")))
-        return q.lastError();
-
-    // create table mail_body
-    if (!q.exec(QLatin1String("create table if not exists mail_body ("
-                              "uid text primary key not null,"
                               "body text,"
-                              "foreign key(m_id) references mail_info(m_id) ON DELETE CASCADE"
+                              "foreign key(user, folder) references dir(user, folder) ON DELETE CASCADE"
                               ");")))
         return q.lastError();
 

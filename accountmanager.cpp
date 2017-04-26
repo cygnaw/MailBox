@@ -1,5 +1,6 @@
 #include "accountmanager.h"
 #include "lib/pop3.h"
+#include "lib/smtp.h"
 
 AccountManager::AccountManager()
 {
@@ -76,7 +77,15 @@ bool AccountManager::validatePop(const QString &user, const QString &pass,
 
 bool AccountManager::validateSmtp(const QString &user, const QString &pass,
                                   const QString &server, int port) {
-    return true;
+    Smtp  smtp;
+    bool valid;
+    valid = smtp.connect(server,port);
+    if(valid)
+    {
+        valid = smtp.login(user,pass);
+        return valid;
+    }
+    return false;
 }
 
 bool AccountManager::add(const QString &username, const QString &password,
