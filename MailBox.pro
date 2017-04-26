@@ -32,7 +32,8 @@ SOURCES += main.cpp\
     lib/smtp.cpp \
     sendwindow.cpp \
     receive.cpp \
-    email.cpp
+    email.cpp \
+    lib/decodestrategy.cpp
 
 HEADERS  += mainwindow.h \
     accountmanager.h \
@@ -41,7 +42,8 @@ HEADERS  += mainwindow.h \
     lib/smtp.h \
     sendwindow.h \
     receive.h \
-    email.h
+    email.h \
+    lib/decodestrategy.h
 
 FORMS    += mainwindow.ui \
     sendwindow.ui
