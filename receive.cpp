@@ -1,8 +1,11 @@
 #include "receive.h"
 #include "accountmanager.h"
 #include "lib/pop3.h"
+#include "lib/decodestrategy.h"
+#include "lib/typestrategy.h"
 #include <QSet>
 #include <QRegularExpression>
+#include <QScopedPointer>
 
 Receive::Receive()
 {
@@ -32,8 +35,8 @@ void Receive::receiveHeaders() {
     pop.pass(pass, resp);
 
     pop.uidl(resp, list, octets);
-    foreach (const QString &line, list) {
-        QStringList l = line.split(' ', QString::SkipEmptyParts);
+    foreach (const QString &it, list) {
+        QStringList l = it.split(' ', QString::SkipEmptyParts);
         if (!set.contains(l[1])) {
             Email mail;
             mail.uid = l[1];
@@ -51,51 +54,35 @@ void Receive::receiveHeaders() {
 }
 
 void Receive::receiveBody(const QString &uid) {
-    AccountManager AM = AccountManager::getInstance();
-    Pop3 pop(AM.getPopServer(), AM.getPopPort());
-    pop.user(AM.getUser());
-    pop.pass(AM.getPass());
-
     QString resp;
     QStringList list;
     int octets;
+    AccountManager &AM = AccountManager::getInstance();
+    Pop3 pop(AM.getPopServer(), AM.getPopPort());
+    pop.user(AM.getUser(), resp);
+    pop.pass(AM.getPass(), resp);
+
+    QStringList l;
     pop.uidl(resp, list, octets);
     foreach (resp, list) {
-        QStringList l = resp.split(' ', QString::SkipEmptyParts);
+        l = resp.split(' ', QString::SkipEmptyParts);
         if (l[1] == uid)
+            break;
+    }
+    pop.retr(l[0].toInt(), resp, list, octets);
+    while (!list.isEmpty()) {
+        if (list.constFirst().isEmpty()) {
+            list.removeAt(0);
+            break;
+        }
+        list.removeAt(0);
     }
 
     pop.quit(resp);
 }
 
 void Receive::parseHeader(const QStringList &list, Email &mail) const {
-    QRegularExpression re("<(.+)>", QRegularExpression::InvertedGreedinessOption);
-    QRegularExpressionMatch match;
-    QRegularExpressionMatchIterator i;
-    foreach (const QString &line, list) {
-        if (line.startsWith("from:", Qt::CaseInsensitive)) {
-            match = re.match(line);
-            mail.from = match.captured(1);
-        } else if (line.startsWith("to:", Qt::CaseInsensitive)) {
-            i = re.globalMatch(line);
-            while (i.hasNext()) {
-                match = i.next();
-                mail.to << match.captured(1);
-            }
-        } else if (line.startsWith("cc:", Qt::CaseInsensitive)){
-            i = re.globalMatch(line);
-            while (i.hasNext()) {
-                match = i.next();
-                mail.cc << match.captured(1);
-            }
-        } else if (line.startsWith("subject:", Qt::CaseInsensitive)) {
-            mail.subject = line.mid(9);
-        } else if (line.startsWith("date:", Qt::CaseInsensitive)) {
-            mail.date = line.mid(6);
-        } else if (line.isEmpty()) {
-            break;
-        }
-    }
+
 }
 
 void Receive::saveHeader(const Email &mail) {
@@ -108,4 +95,81 @@ void Receive::saveHeader(const Email &mail) {
                             mail.cc.join(','), mail.subject, mail.date);
     query.exec(s);
 
+}
+
+
+
+void Parser::parseHeader(QStringList::iterator &it,
+                    const QStringList::iterator &end,
+                    Email &mail) const {
+    QRegularExpression re("<(.+)>", QRegularExpression::InvertedGreedinessOption);
+    QRegularExpressionMatch match;
+    QRegularExpressionMatchIterator i;
+    for (; it != end; ++it) {
+        if (it->startsWith("from:", Qt::CaseInsensitive)) {
+            match = re.match(*it);
+            mail.from = match.captured(1);
+        } else if (it->startsWith("to:", Qt::CaseInsensitive)) {
+            i = re.globalMatch(*it);
+            while (i.hasNext()) {
+                match = i.next();
+                mail.to << match.captured(1);
+            }
+        } else if (it->startsWith("cc:", Qt::CaseInsensitive)){
+            i = re.globalMatch(*it);
+            while (i.hasNext()) {
+                match = i.next();
+                mail.cc << match.captured(1);
+            }
+        } else if (it->startsWith("subject:", Qt::CaseInsensitive)) {
+            mail.subject = it->mid(9);
+        } else if (it->startsWith("date:", Qt::CaseInsensitive)) {
+            mail.date = it->mid(6);
+        } else if (it->isEmpty()) {
+            break;
+        }
+    }
+}
+
+void Parser::parseBody(QStringList::iterator &it, const QStringList::iterator &end, QString &body) {
+    DecodeStrategy* decoder = nullptr;
+    TypeStrategy* type = nullptr;
+    QString boundary;
+    for (; !it->isEmpty(); ++it) {
+        if (it->contains("content-type", Qt::CaseInsensitive)) {
+            if (it->contains("text/html", Qt::CaseInsensitive))
+                type = new TypeTextHtml;
+            else if (it->contains("text/plain", Qt::CaseInsensitive))
+                type = new TypeTextPlain;
+            else if (it->contains("multipart/alternative", Qt::CaseInsensitive))
+                type = new TypeMultipartAlternative;
+        }
+        if (it->contains("boundary=", Qt::CaseInsensitive)) {
+            QRegularExpression re("boundary=\"(.+)\"", QRegularExpression::CaseInsensitiveOption);
+            QRegularExpressionMatch match = re.match(*it);
+            boundary = match.captured(1);
+        }
+        if (it->contains("content-transfer-encoding", Qt::CaseInsensitive)) {
+            if (it->contains("7bit", Qt::CaseInsensitive))
+                decoder = new Decode7Bit;
+            else if (it->contains("8bit", Qt::CaseInsensitive))
+                decoder = new Decode8Bit;
+            else if (it->contains("binary", Qt::CaseInsensitive))
+                decoder = new DecodeBinary;
+            else if (it->contains("quoted-printable", Qt::CaseInsensitive))
+                decoder = new DecodeQuotedPrintable;
+            else if (it->contains("base64", Qt::CaseInsensitive))
+                decoder = new DecodeBase64;
+        }
+    }
+    if (type == nullptr)
+        type = new TypeTextPlain;
+    if (decoder == nullptr)
+        decoder = new Decode8Bit;
+
+    type->setDecoder(decoder);
+    type->setBoundary(boundary);
+    type->handle(it, end, body);
+    delete decoder;
+    delete type;
 }

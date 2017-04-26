@@ -1,5 +1,5 @@
-#ifndef MAIL_H
-#define MAIL_H
+#ifndef EMAIL_H
+#define EMAIL_H
 
 #include <QString>
 #include <QStringList>
@@ -16,4 +16,4 @@ struct Email
 };
 
 
-#endif // MAIL_H
+#endif // EMAIL_H

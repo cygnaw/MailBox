@@ -16,4 +16,20 @@ private:
     void saveHeader(const Email &mail);
 };
 
+class Parser {
+public:
+    Parser() {}
+    ~Parser() {}
+    void parseHeader(QStringList::iterator &it,
+                     const QStringList::iterator &end,
+                     Email &mail) const;
+    void parseBody(QStringList::iterator &it,
+                   const QStringList::iterator &end,
+                   QString &body);
+};
+
+class MultiParser: Parser {
+
+};
+
 #endif // RECEIVE_H
