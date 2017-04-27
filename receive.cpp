@@ -8,10 +8,6 @@
 #include <QScopedPointer>
 #include <QLocale>
 
-Receive::Receive()
-{
-
-}
 
 void Receive::receiveHeaders() {
     AccountManager &AM = AccountManager::getInstance();
@@ -131,6 +127,8 @@ void Parser::parseBody(QStringList::iterator &it, const QStringList::iterator &e
                 type = new TypeTextPlain;
             else if (it->contains("multipart/alternative", Qt::CaseInsensitive))
                 type = new TypeMultipartAlternative;
+            else if (it->contains("multipart/mixed", Qt::CaseInsensitive))
+                type = new TypeMultipartMixed;
         }
         if (it->contains("boundary=", Qt::CaseInsensitive)) {
             QRegularExpression re("boundary=\"(.+)\"", QRegularExpression::CaseInsensitiveOption);
@@ -233,7 +231,6 @@ QString Parser::parseSubject(const QString &str) {
 }
 
 QString Parser::parseDate(const QString &str) {
-    QString result;
     const QString &s = str.mid(6, 25);
     QString format("ddd, dd MMM yyyy hh:mm:ss");
     QLocale locale(QLocale::English, QLocale::UnitedStates);

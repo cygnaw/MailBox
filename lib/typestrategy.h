@@ -43,4 +43,11 @@ public:
                 QString &result) const;
 };
 
+class TypeMultipartMixed: public TypeMultipart {
+public:
+    void handle(QStringList::iterator &it,
+                const QStringList::iterator &end,
+                QString &result) const;
+};
+
 #endif // TYPESTRATEGY_H

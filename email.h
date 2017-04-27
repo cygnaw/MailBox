@@ -3,6 +3,7 @@
 
 #include <QString>
 #include <QStringList>
+#include <QDateTime>
 
 struct Email
 {
@@ -13,6 +14,9 @@ struct Email
     QString cc;
     QString date;
     QString body;
+    Email() {
+        date = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
+    }
 };
 
 
