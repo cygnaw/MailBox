@@ -4,15 +4,31 @@
 #include <QByteArray>
 #include <QString>
 #include <QStringList>
+#include <QTextCodec>
 
 class DecodeStrategy
 {
+protected:
+    QTextCodec* codec;
 public:
+    DecodeStrategy(): codec(QTextCodec::codecForName("utf-8")) {}
+    virtual ~DecodeStrategy() { delete codec; }
+    virtual void setCodec(const QString &name) {
+        QTextCodec *tmp = QTextCodec::codecForName(name.toUtf8());
+        if (tmp) {
+            delete codec;
+            codec = tmp;
+        }
+    }
     virtual void decode(const QString &src, QString &to) {
-        to = src;
+        QByteArray tmp;
+        tmp.append(src);
+        to = codec->toUnicode(tmp);
     }
     virtual void decode(const QStringList &src, QString &to) {
-        to = src.join("\n");
+        QByteArray tmp;
+        tmp.append(src.join("\n"));
+        to = codec->toUnicode(tmp);
     }
 };
 

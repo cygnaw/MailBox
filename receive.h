@@ -11,18 +11,17 @@ public:
     void parseBody(QStringList::iterator &it,
                    const QStringList::iterator &end,
                    QString &body);
-private:
     QString parseFrom(const QString &str);
     QString parseTo(const QString &str);
     QString parseCc(const QString &str);
     QString parseSubject(const QString &str);
     QString parseDate(const QString &str);
+private:
 };
 
 class Receive
 {
 public:
-    Receive();
     void receiveHeaders();
     void receiveBody(const QString &uid);
 private:

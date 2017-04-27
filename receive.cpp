@@ -118,6 +118,7 @@ void Parser::parseHeader(QStringList::iterator &it,
 void Parser::parseBody(QStringList::iterator &it, const QStringList::iterator &end, QString &body) {
     DecodeStrategy* decoder = nullptr;
     TypeStrategy* type = nullptr;
+    QString codec_name;
     QString boundary;
     for (; !it->isEmpty(); ++it) {
         if (it->contains("content-type", Qt::CaseInsensitive)) {
@@ -134,6 +135,11 @@ void Parser::parseBody(QStringList::iterator &it, const QStringList::iterator &e
             QRegularExpression re("boundary=\"(.+)\"", QRegularExpression::CaseInsensitiveOption);
             QRegularExpressionMatch match = re.match(*it);
             boundary = match.captured(1);
+        }
+        if (it->contains("charset=")) {
+            QRegularExpression re("charset=\\S+");
+            QRegularExpressionMatch match = re.match(*it);
+            codec_name = match.captured(1);
         }
         if (it->contains("content-transfer-encoding", Qt::CaseInsensitive)) {
             if (it->contains("7bit", Qt::CaseInsensitive))
@@ -153,6 +159,7 @@ void Parser::parseBody(QStringList::iterator &it, const QStringList::iterator &e
     if (decoder == nullptr)
         decoder = new Decode8Bit;
 
+    decoder->setCodec(codec_name);
     type->setDecoder(decoder);
     type->setBoundary(boundary);
     type->handle(it, end, body);
@@ -224,6 +231,7 @@ QString Parser::parseSubject(const QString &str) {
             decoder = new DecodeBase64;
         else
             decoder = new DecodeQuotedPrintable;
+        decoder->setCodec(match.captured(1));
         decoder->decode(match.captured(3), result);
         return result;
     }

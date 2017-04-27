@@ -14,7 +14,8 @@ void DecodeQuotedPrintable::decode(const QString &src, QString &to) {
         else
             decode_string.append(tmp.at(i));
     }
-    to = QString::fromUtf8(decode_string);
+
+    to = codec->toUnicode(decode_string);
 }
 
 void DecodeQuotedPrintable::decode(const QStringList &src, QString &to) {
@@ -28,12 +29,16 @@ void DecodeQuotedPrintable::decode(const QStringList &src, QString &to) {
 }
 
 void DecodeBase64::decode(const QString &src, QString &to) {
-    to = QByteArray::fromBase64(src.toUtf8());
+    QByteArray tmp;
+    tmp.append(src);
+    tmp = QByteArray::fromBase64(tmp);
+    to = codec->toUnicode(tmp);
 }
 
 void DecodeBase64::decode(const QStringList &src, QString &to) {
     QByteArray tmp;
     tmp.append(src.join(""));
-    to = QByteArray::fromBase64(tmp);
+    tmp = QByteArray::fromBase64(tmp);
+    to = codec->toUnicode(tmp);
 }
 
