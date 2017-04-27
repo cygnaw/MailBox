@@ -1,5 +1,6 @@
 #include "typestrategy.h"
 #include "QDebug"
+#include <QRegularExpression>
 
 
 void TypeText::handle(QStringList::iterator &it,
@@ -23,6 +24,7 @@ void TypeMultipartAlternative::handle(QStringList::iterator &it,
 
     while (it != end) {
         if (it->startsWith("--"+boundary)) {
+            QString charset;
             for (; !it->isEmpty(); ++it) {
                 if (it->contains("content-type", Qt::CaseInsensitive)) {
                     if (it->contains("text/html", Qt::CaseInsensitive)) {
@@ -43,12 +45,19 @@ void TypeMultipartAlternative::handle(QStringList::iterator &it,
                     else if (it->contains("base64", Qt::CaseInsensitive))
                         nextDecode = new DecodeBase64;
                 }
+                if (it->contains("charset=")) {
+                    QRegularExpression re("charset=\"(\\w+)\"");
+                    QRegularExpressionMatch match = re.match(*it);
+                    charset = match.captured(1);
+                }
             }
             if (nextType == nullptr)
                 nextType = new TypeTextPlain;
             if (nextDecode == nullptr)
                 nextDecode = new Decode8Bit;
 
+
+            nextDecode->setCodec(charset);
             nextType->setDecoder(nextDecode);
             begin = ++it;
             for (; !it->startsWith("--"+boundary); ++it) continue;
