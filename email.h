@@ -9,8 +9,8 @@ struct Email
     QString uid;
     QString subject;
     QString from;
-    QStringList to;
-    QStringList cc;
+    QString to;
+    QString cc;
     QString date;
     QString body;
 };

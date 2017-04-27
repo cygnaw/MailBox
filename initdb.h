@@ -26,9 +26,9 @@ QSqlError initDb() {
                               "username     text primary key    not null unique,"
                               "password     text                not null,"
                               "pop_server   text                not null,"
-                              "pop_port     integer             not null,"
+                              "pop_port     integer             not null default 110,"
                               "smtp_server  text                not null,"
-                              "smtp_port    integer             not null,"
+                              "smtp_port    integer             not null default 25,"
                               "check (username like '%@%.%')"
                               ");")))
         return q.lastError();

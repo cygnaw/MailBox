@@ -6,6 +6,7 @@
 #include <QSet>
 #include <QRegularExpression>
 #include <QScopedPointer>
+#include <QLocale>
 
 Receive::Receive()
 {
@@ -21,9 +22,9 @@ void Receive::receiveHeaders() {
 
     QSqlQuery query;
     QSet<QString> set;
-    query.exec(QString("SELECT m_id FROM receive_mail WHERE user='%1';").arg(user));
+    query.exec(QString("SELECT uid FROM receive_mail WHERE user='%1';").arg(user));
     while (query.next()) {
-        set << query.value(QLatin1String("m_id")).toString();
+        set << query.value(QLatin1String("uid")).toString();
     }
 
     QString resp;
@@ -44,7 +45,8 @@ void Receive::receiveHeaders() {
             QStringList list;
             int octets;
             pop.top(l[0].toInt(), 0, resp, list, octets);
-            parseHeader(list, mail);
+            QStringList::iterator it = list.begin();
+            parser.parseHeader(it, list.end(), mail);
             saveHeader(mail);
         }
     }
@@ -70,64 +72,50 @@ void Receive::receiveBody(const QString &uid) {
             break;
     }
     pop.retr(l[0].toInt(), resp, list, octets);
-    while (!list.isEmpty()) {
-        if (list.constFirst().isEmpty()) {
-            list.removeAt(0);
-            break;
-        }
-        list.removeAt(0);
-    }
-
+    QStringList::iterator it = list.begin();
+    QString body;
+    parser.parseBody(it, list.end(), body);
+    saveBody(uid, body);
     pop.quit(resp);
 }
 
-void Receive::parseHeader(const QStringList &list, Email &mail) const {
-
-}
 
 void Receive::saveHeader(const Email &mail) {
     QSqlQuery query;
     QString user = AccountManager::getInstance().getUser();
     QString s = QString("INSERT INTO receive_mail ( "
-                        "uid, user, from, to, cc, subject, date) "
+                        "uid, user, sender, receiver, cc, subject, date) "
                         "values ('%1', '%2', '%3', '%4', '%5', '%6', '%7');").arg(
-                            mail.uid, user, mail.from, mail.to.join(','),
-                            mail.cc.join(','), mail.subject, mail.date);
+                            mail.uid, user, mail.from, mail.to,
+                            mail.cc, mail.subject, mail.date);
     query.exec(s);
-
 }
 
-
+void Receive::saveBody(const QString &uid, const QString &body) {
+    QSqlQuery query;
+    QString s = QString("UPDATE receive_mail "
+                        "SET downloaded = 1, body = '%1'"
+                        "WHERE uid = '%2'").arg(body, uid);
+    query.exec(s);
+    qDebug() << query.lastError();
+}
 
 void Parser::parseHeader(QStringList::iterator &it,
                     const QStringList::iterator &end,
-                    Email &mail) const {
-    QRegularExpression re("<(.+)>", QRegularExpression::InvertedGreedinessOption);
-    QRegularExpressionMatch match;
-    QRegularExpressionMatchIterator i;
+                    Email &mail) {
     for (; it != end; ++it) {
-        if (it->startsWith("from:", Qt::CaseInsensitive)) {
-            match = re.match(*it);
-            mail.from = match.captured(1);
-        } else if (it->startsWith("to:", Qt::CaseInsensitive)) {
-            i = re.globalMatch(*it);
-            while (i.hasNext()) {
-                match = i.next();
-                mail.to << match.captured(1);
-            }
-        } else if (it->startsWith("cc:", Qt::CaseInsensitive)){
-            i = re.globalMatch(*it);
-            while (i.hasNext()) {
-                match = i.next();
-                mail.cc << match.captured(1);
-            }
-        } else if (it->startsWith("subject:", Qt::CaseInsensitive)) {
-            mail.subject = it->mid(9);
-        } else if (it->startsWith("date:", Qt::CaseInsensitive)) {
-            mail.date = it->mid(6);
-        } else if (it->isEmpty()) {
+        if (it->startsWith("from:", Qt::CaseInsensitive))
+            mail.from = parseFrom(*it);
+        else if (it->startsWith("to:", Qt::CaseInsensitive))
+            mail.to = parseTo(*it);
+        else if (it->startsWith("cc:", Qt::CaseInsensitive))
+            mail.cc = parseCc(*it);
+        else if (it->startsWith("subject:", Qt::CaseInsensitive))
+            mail.subject = parseSubject(*it);
+        else if (it->startsWith("date:", Qt::CaseInsensitive))
+            mail.date = parseDate(*it);
+        else if (it->isEmpty())
             break;
-        }
     }
 }
 
@@ -172,4 +160,84 @@ void Parser::parseBody(QStringList::iterator &it, const QStringList::iterator &e
     type->handle(it, end, body);
     delete decoder;
     delete type;
+}
+
+QString Parser::parseFrom(const QString &str) {
+    QRegularExpression re("<(\\w+@\\w+\\.\\w+)>");
+    QRegularExpressionMatch match = re.match(str);
+    if (match.hasMatch())
+        return match.captured(1);
+    re = QRegularExpression("\\w+@\\w+\\.\\w+");
+    match = re.match(str);
+    if (match.hasMatch())
+        return match.captured(0);
+    return "";
+}
+
+QString Parser::parseTo(const QString &str) {
+    QRegularExpression re("<(\\w+@\\w+\\.\\w+)>");
+    QRegularExpressionMatchIterator i = re.globalMatch(str);
+    QRegularExpressionMatch match;
+    QString result;
+    while (i.hasNext()) {
+        result += i.next().captured(1);
+        result += ",";
+    }
+    if (!result.isEmpty())
+        return result;
+
+    re = QRegularExpression("\\w+@\\w+\\.\\w+");
+    i = re.globalMatch(str);
+    while (i.hasNext()) {
+        result += i.next().captured(0);
+        result += ",";
+    }
+    return result;
+}
+
+QString Parser::parseCc(const QString &str) {
+    QRegularExpression re("<(\\w+@\\w+\\.\\w+)>");
+    QRegularExpressionMatchIterator i = re.globalMatch(str);
+    QRegularExpressionMatch match;
+    QString result;
+    while (i.hasNext()) {
+        result += i.next().captured(1);
+        result += ",";
+    }
+    if (!result.isEmpty())
+        return result;
+
+    re = QRegularExpression("\\w+@\\w+\\.\\w+");
+    i = re.globalMatch(str);
+    while (i.hasNext()) {
+        result += i.next().captured(0);
+        result += ",";
+    }
+    return result;
+}
+
+QString Parser::parseSubject(const QString &str) {
+    QString result;
+    QRegularExpression re("=\\?(\\S+)\\?([BQ])\\?(\\S+)\\?=");
+    QRegularExpressionMatch match = re.match(str);
+    if (match.hasMatch()) {
+        DecodeStrategy* decoder;
+        if (match.captured(2) == "B")
+            decoder = new DecodeBase64;
+        else
+            decoder = new DecodeQuotedPrintable;
+        decoder->decode(match.captured(3), result);
+        return result;
+    }
+    return str.mid(9);
+}
+
+QString Parser::parseDate(const QString &str) {
+    QString result;
+    const QString &s = str.mid(6, 25);
+    QString format("ddd, dd MMM yyyy hh:mm:ss");
+    QLocale locale(QLocale::English, QLocale::UnitedStates);
+    QDateTime date = locale.toDateTime(s, format);
+    if (!date.isValid()) date = QDateTime::currentDateTime();
+    return date.toString("yyyy-MM-dd hh:mm:ss");
 }
