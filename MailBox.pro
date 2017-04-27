@@ -34,7 +34,12 @@ SOURCES += main.cpp\
     receive.cpp \
     email.cpp \
     lib/decodestrategy.cpp \
-    lib/typestrategy.cpp
+    lib/typestrategy.cpp \
+    email.cpp \
+    #accountsetting.cpp \
+    showmessage.cpp \
+    creataccount.cpp \
+    newfolder.cpp
 
 HEADERS  += mainwindow.h \
     accountmanager.h \
@@ -45,7 +50,19 @@ HEADERS  += mainwindow.h \
     receive.h \
     email.h \
     lib/decodestrategy.h \
-    lib/typestrategy.h
+    lib/typestrategy.h \
+    email.h \
+    #accountsetting.h \
+    showmessage.h \
+    creataccount.h \
+    newfolder.h
 
 FORMS    += mainwindow.ui \
-    sendwindow.ui
+    sendwindow.ui \
+    #accountsetting.ui \
+    creataccount.ui \
+    newfolder.ui
+
+RESOURCES += \
+    icon.qrc
+RC_FILE = icon.rc

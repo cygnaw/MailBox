@@ -1,0 +1,24 @@
+<RCC>
+    <qresource prefix="/new/prefix1">
+        <file>icons/head.ico</file>
+        <file>icons/account.ico</file>
+        <file>icons/attach.ico</file>
+        <file>icons/cancel.ico</file>
+        <file>icons/cloud1.ico</file>
+        <file>icons/compose.ico</file>
+        <file>icons/delete.ico</file>
+        <file>icons/draft.ico</file>
+        <file>icons/folder.ico</file>
+        <file>icons/Inbo.ico</file>
+        <file>icons/ok.ico</file>
+        <file>icons/password.ico</file>
+        <file>icons/port.ico</file>
+        <file>icons/reply.ico</file>
+        <file>icons/save.ico</file>
+        <file>icons/send.ico</file>
+        <file>icons/sent.ico</file>
+        <file>icons/setting.ico</file>
+        <file>icons/trash.ico</file>
+        <file>icons/forward.ico</file>
+    </qresource>
+</RCC>
