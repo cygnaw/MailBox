@@ -13,7 +13,7 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    /*
+
     QFile file("e:/MailBox/qss0.qss");
     if( file.open(QFile::ReadOnly))
     {
@@ -29,24 +29,25 @@ int main(int argc, char *argv[])
     initDb();
     /////////////////////////////////////////////////////
     AccountManager::add("kaijietang@sina.cn","guessmypwd","pop.sina.cn",110,"smtp.sina.cn",25);
-    AccountManager::add("peiyunjia@sina.com","jia123","pop.sina.cn",110,"smtp.sina.cn",25);
-    QSqlQuery q;
-    q.exec(QString("INSERT INTO send_mail (user, sended, sender, receiver, date, subject, body)"
-                   "VALUES ('peiyunjia@sina.com', 1, 'peiyunjia@sina.com', 'taylover_pei@163.com', '04-26', 'ceshi1', 'jiayunpei');"));
-    q.exec(QString("INSERT INTO send_mail (user, sended, sender, receiver, date, subject, body)"
-                   "VALUES ('peiyunjia@sina.com', 1, 'peiyunjia@sina.com', 'jiayunpei@126.com', '04-26', 'ceshi2', 'peiyunjia');"));
-    q.exec(QString("INSERT INTO send_mail (user, sended, sender, receiver, date, subject, body)"
-                   "VALUES ('peiyunjia@sina.com', 0, 'peiyunjia@sina.com', 'jiayunpei@126.com', '04-26', 'caogao1', 'peiyunjia');"));
-    q.exec(QString("INSERT INTO dir (user, folder)"
-                   "VALUES ('peiyunjia@sina.com', 'folder1');"));
-    q.exec(QString("INSERT INTO dir (user, folder)"
-                   "VALUES ('peiyunjia@sina.com', 'wenjianjia');"));
-    q.exec(QString("INSERT INTO receive_mail (uid, user, folder, deleted, downloaded, sender, receiver, subject, date, body)"
-                   "VALUES ('xxyy11', 'peiyunjia@sina.com', 'folder1', 0, 1, 'kaijietang@sina.cn', 'peiyunjia@sina.com',"
-                   "'jiayunpei1', '04-27', 'This is a test.');"));
-    q.exec(QString("INSERT INTO receive_mail (uid, user, folder, deleted, downloaded, sender, receiver, subject, date, body)"
-                   "VALUES ('xxyy22', 'peiyunjia@sina.com', 'folder1', 0, 1, 'jiayunpei@126.com', 'peiyunjia@sina.com',"
-                   "'peiyunjia', '04-22', 'Hello world.');"));
+    AccountManager::add("peiyunjia@sina.com","jia123","pop.sina.com",110,"smtp.sina.com",25);
+    AccountManager::add("taylover_pei@163.com","jia123","pop.163.com",110,"smtp.163.com",25);
+//    QSqlQuery q;
+//    q.exec(QString("INSERT INTO send_mail (user, sended, sender, receiver, date, subject, body)"
+//                   "VALUES ('peiyunjia@sina.com', 1, 'peiyunjia@sina.com', 'taylover_pei@163.com', '04-26', 'ceshi1', 'jiayunpei');"));
+//    q.exec(QString("INSERT INTO send_mail (user, sended, sender, receiver, date, subject, body)"
+//                   "VALUES ('peiyunjia@sina.com', 1, 'peiyunjia@sina.com', 'jiayunpei@126.com', '04-26', 'ceshi2', 'peiyunjia');"));
+//    q.exec(QString("INSERT INTO send_mail (user, sended, sender, receiver, date, subject, body)"
+//                   "VALUES ('peiyunjia@sina.com', 0, 'peiyunjia@sina.com', 'jiayunpei@126.com', '04-26', 'caogao1', 'peiyunjia');"));
+//    q.exec(QString("INSERT INTO dir (user, folder)"
+//                   "VALUES ('peiyunjia@sina.com', 'folder1');"));
+//    q.exec(QString("INSERT INTO dir (user, folder)"
+//                   "VALUES ('peiyunjia@sina.com', 'wenjianjia');"));
+//    q.exec(QString("INSERT INTO receive_mail (uid, user, folder, deleted, downloaded, sender, receiver, subject, date, body)"
+//                   "VALUES ('xxyy11', 'peiyunjia@sina.com', 'folder1', 0, 1, 'kaijietang@sina.cn', 'peiyunjia@sina.com',"
+//                   "'jiayunpei1', '04-27', 'This is a test.');"));
+//    q.exec(QString("INSERT INTO receive_mail (uid, user, folder, deleted, downloaded, sender, receiver, subject, date, body)"
+//                   "VALUES ('xxyy22', 'peiyunjia@sina.com', 'folder1', 0, 1, 'jiayunpei@126.com', 'peiyunjia@sina.com',"
+//                   "'peiyunjia', '04-22', 'Hello world.');"));
  /////////////////////////////////////////////////////////////////////////
 
     MainWindow w;
@@ -95,7 +96,7 @@ int main(int argc, char *argv[])
 //    }
 
 //    pop.quit(resp);
-*/
+/*
     QStringList l;
     l << "ttS/ucj8vda3u8HavtPKpbWuv+zA1ri9vfxzYWS9+Lfnv9rAy7zisKLLucH";
     l << "Lt6jCyb/yvNwNCrCituTKrrfWvOi/4MCtyPi9+Lfnv9rBy7XayP28vreows";
@@ -108,4 +109,5 @@ int main(int argc, char *argv[])
     decoder->decode(l, result);
     qDebug() << result;
     return a.exec();
+    */
 }

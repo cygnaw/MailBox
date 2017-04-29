@@ -17,7 +17,7 @@ public:
     bool connect(const QString &host, int port);
     bool ehlo(const QString &name);
     bool login(const QString &user,const QString &passwd);
-    bool sendmail(const QString from_address,QString to,QString cc,QString bcc,const QString subject,const QString content);
+    bool sendmail(const QString from_address,QString to,QString cc,QString bcc,const QString subject,const QString content, QFile *file,int number);
     bool quit();
 private:
     void waitresponse();

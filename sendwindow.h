@@ -28,6 +28,8 @@ private slots:
 
     void Editmail(QString&);
 
+    void on_attachbutton_clicked();
+
 private:
     Ui::SendWindow *ui;
     QString username;

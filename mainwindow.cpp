@@ -27,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent) :
     palette=ui->textBrowser->palette();
     palette.setBrush(QPalette::Base,QBrush(Qt::NoBrush));
 //    ui->textBrowser->setPalette(palette);
-    ui->treeView->setPalette(palette);
+//    ui->treeView->setPalette(palette);
     //ui->tableView->setPalette(palette);
     ui->treeView->setFrameStyle(QFrame::NoFrame);
     ui->tableView->setFrameStyle(QFrame::NoFrame);
@@ -209,17 +209,12 @@ void MainWindow::on_tableView_clicked(const QModelIndex &index)
     unique_id = m->index(row,3).data().toString();
     QSqlQuery q;
     q.exec(QString("SELECT downloaded FROM receive_mail WHERE uid = '%1';").arg(unique_id));
-    q.next();
-    qDebug() << q.lastError();
     if(q.value("downloaded").toInt() == 0)
     {
         Receive receive_body;
         receive_body.receiveBody(unique_id);
     }
     q.exec(QString("SELECT body FROM receive_mail WHERE uid = '%1';").arg(unique_id));
-    q.next();
-
-    qDebug() << q.value(0).toString();
     ui->textBrowser->setText(q.value(0).toString());
 
     ui->actionDelete->setEnabled(true);
@@ -290,7 +285,6 @@ void MainWindow::move_to_folder(QAction* action)
         emit creat_newfolder(account_index.data().toString());
         if(newfolder->exec() == QDialog::Accepted)
             show_treeview_info();
-        newfolder->show();
     }
 }
 

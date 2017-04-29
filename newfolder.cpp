@@ -18,10 +18,8 @@ void NewFolder::on_createButton_clicked()
 {
     QString folder_name = ui->foldername->text();
     QSqlQuery q;
-    qDebug() << saved_account << folder_name;
     q.exec(QString("INSERT INTO dir (user, folder) VALUES ('%1', '%2');").arg(saved_account).arg(folder_name));
-    accept();
-    this->close();
+    this->accept();
 }
 
 void NewFolder::on_cancelButton_clicked()

@@ -61,6 +61,11 @@ bool Smtp::ehlo(const QString &name)
 
 bool Smtp::login(const QString &user, const QString &passwd)
 {
+    QString name = "taylover";
+    docmd("EHLO " + name);
+    waitresponse();
+    if(responseCode != 250)
+        return false;
     docmd("AUTH LOGIN");
     waitresponse();
     if(responseCode != 334)
@@ -76,7 +81,7 @@ bool Smtp::login(const QString &user, const QString &passwd)
     return true;
 }
 
-bool Smtp::sendmail(const QString from_address, QString to, QString cc, QString bcc, const QString subject, const QString content)
+bool Smtp::sendmail(const QString from_address, QString to, QString cc, QString bcc, const QString subject, const QString content, QFile *file,int number)
 {
     docmd("MAIL FROM: <" + from_address + ">");
     waitresponse();
@@ -91,8 +96,6 @@ bool Smtp::sendmail(const QString from_address, QString to, QString cc, QString 
         if(responseCode != 250)
             return false;
     }
-    int l =cc.isEmpty();
-    qDebug("cc.isEmpty() = %d",l);
     if(!cc.isEmpty())
     {
         QStringList Cc = cc.split(";");
@@ -151,11 +154,33 @@ bool Smtp::sendmail(const QString from_address, QString to, QString cc, QString 
         message += "\r\n";
     }
 
-    /* ---- Subject ----*/
-     message = message + "Subject: " + subject + "\r\n\r\n";
-
-     /* ---- Content ----*/
-     message = message + content;
+    if(number)//have attachment
+    {
+          message = message + "Subject: " + subject + "\r\n";
+          message = message + "MIME-Version: 1.0" + "\r\n";
+          message = message + "Content-Type: multipart/mixed; boundary=nextmessage_jia_123" + "\r\n";
+          message = message + "This is a multi-part message in MIME format." + "\r\n\r\n";
+          message = message + "--nextmessage_jia_123" + "\r\n";
+          message = message + "Content-Type: text/html;" + " charset=utf-8\r\n\r\n";
+          message = message + content;
+          message = message + "\r\n";
+          message = message + "--nextmessage_jia_123" + "\r\n";
+          QString name = QFileInfo(*file).fileName();
+          message = message + "Content-Type: application/octet-stream; " + "name=\"" + name + "\"\r\n";
+          message = message + "Content-Disposition: attachment" + "\r\n\r\n";
+          file->open(QIODevice::ReadOnly);
+          message = message + file->readAll();
+          file->close();
+          message = message + "\r\n\r\n";
+          message = message + "--nextmessage_jia_123--" + "\r\n";
+    }
+    else//no attachment
+    {
+        message = message + "Subject: " + subject + "\r\n";
+        message = message + "MIME-Version: 1.0" + "\r\n";
+        message = message + "Content-Type: text/html;" + " charset=utf-8\r\n";
+        message = message + content;
+    }
      docmd(message);
      docmd("\r\n.\r\n");
      waitresponse();

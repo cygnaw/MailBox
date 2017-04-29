@@ -50,53 +50,17 @@
     <item row="0" column="1">
      <widget class="QComboBox" name="comboBox"/>
     </item>
-    <item row="4" column="0" colspan="2">
-     <layout class="QGridLayout" name="gridLayout_2">
+    <item row="1" column="0" colspan="2">
+     <layout class="QGridLayout" name="gridLayout_4">
       <item row="0" column="0">
-       <widget class="QLabel" name="label_6">
+       <widget class="QLabel" name="label">
         <property name="text">
-         <string> Attach：</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QPushButton" name="attachbutton">
-        <property name="text">
-         <string>附件</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normalon>:/new/prefix1/icons/attach.ico</normalon>
-         </iconset>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="3">
-       <widget class="QPushButton" name="savebutton">
-        <property name="text">
-         <string>保存</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normalon>:/new/prefix1/icons/save.ico</normalon>
-         </iconset>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="4">
-       <widget class="QPushButton" name="sendbutton">
-        <property name="text">
-         <string>发送</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normalon>:/new/prefix1/icons/send.ico</normalon>
-         </iconset>
+         <string>     To：</string>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="attachment"/>
+       <widget class="QLineEdit" name="recipient"/>
       </item>
      </layout>
     </item>
@@ -148,17 +112,78 @@
       </item>
      </layout>
     </item>
-    <item row="1" column="0" colspan="2">
-     <layout class="QGridLayout" name="gridLayout_4">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
+    <item row="4" column="0" colspan="2">
+     <layout class="QGridLayout" name="gridLayout_2">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetFixedSize</enum>
+      </property>
+      <item row="0" column="3">
+       <widget class="QPushButton" name="attachbutton">
         <property name="text">
-         <string>     To：</string>
+         <string>附件</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normalon>:/new/prefix1/icons/attach.ico</normalon>
+         </iconset>
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="recipient"/>
+      <item row="0" column="4">
+       <widget class="QPushButton" name="savebutton">
+        <property name="text">
+         <string>保存</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normalon>:/new/prefix1/icons/save.ico</normalon>
+         </iconset>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="5">
+       <widget class="QPushButton" name="sendbutton">
+        <property name="text">
+         <string>发送</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normalon>:/new/prefix1/icons/send.ico</normalon>
+         </iconset>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QListWidget" name="attachment">
+        <property name="autoScrollMargin">
+         <number>0</number>
+        </property>
+        <property name="editTriggers">
+         <set>QAbstractItemView::AllEditTriggers</set>
+        </property>
+        <property name="resizeMode">
+         <enum>QListView::Fixed</enum>
+        </property>
+        <property name="gridSize">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="batchSize">
+         <number>85</number>
+        </property>
+        <property name="currentRow">
+         <number>-1</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string> Attach：</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>
