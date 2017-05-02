@@ -56,7 +56,7 @@ void SendWindow::on_sendbutton_clicked()
     if(!smtp.login(username,password))
     {
         QMessageBox warning;
-        warning.setText("test : "+ smtp.responseText);
+        warning.setText(smtp.responseText);
         warning.exec();
         return;
     }
@@ -94,9 +94,10 @@ void SendWindow::on_sendbutton_clicked()
         QDateTime* time = new QDateTime;
         QString localtime = time->currentDateTime().toString("MM-dd hh:mm");
         QSqlQuery q;
+        content = ui->content->toPlainText();
         q.exec(QString("INSERT INTO send_mail (user, sended, sender, receiver, cc, bcc, date, subject, body)"
-                        "VALUES ('%1', '%2', '%3', '%4', '%5', '%6', '%7', '%8', '%9');"
-                        ).arg(username).arg(1).arg(username, To, Cc, Bcc, localtime, subject, content));
+                       "VALUES ('%1', '%2', '%3', '%4', '%5', '%6', '%7', '%8', '%9');"
+                       ).arg(username).arg(1).arg(username, To, Cc, Bcc, localtime, subject, content));
         process_bar.show_processbar(50,100,process);
         QMessageBox warning;
         warning.setText("Message sent successfully!");
@@ -163,19 +164,22 @@ void SendWindow::Replymail(QString& unique_id, int flag)
     ui->comboBox->setCurrentText(q.value("user").toString());
     SendWindow::get_currentAccount(q.value("user").toString());
     is_reply_or_forward = flag;
-    reply_forward_message = QString("\n\n\n\n---------------------------------------") +
-                    QString("\nFrom:  ") + q.value("sender").toString() +
-                    QString("\nDate:  ") + q.value("date").toString() +
-                    QString("\nTo:  ") + q.value("receiver").toString() +
-                    QString("\nSubject:  ") + q.value("subject").toString() +
-                    QString("\n\n\n") + q.value("body").toString() +
-                    QString("\n\n---------------------------------------");
+    reply_forward_message = QString("<br><br><br><br>---------------------------------------") +
+                    QString("<br>From:&nbsp") + q.value("sender").toString() +
+                    QString("<br>Date:&nbsp") + q.value("date").toString() +
+                    QString("<br>To:&nbsp") + q.value("receiver").toString() +
+                    QString("<br>Subject:&nbsp") + q.value("subject").toString() +
+                    QString("<br><br><br>") + q.value("body").toString() +
+                    QString("<br><br>---------------------------------------");
+    //ui->content->setText(reply_forward_message);
+    //ui->content->setHtml(reply_forward_message);
 }
 
 void SendWindow::Editmail(QString& unique_id)
 {
     QSqlQuery q;
     q.exec(QString("SELECT user, sender, receiver, cc, bcc, subject, body FROM send_mail WHERE uid = '%1'").arg(unique_id));
+    q.next();
     SendWindow::get_currentAccount(q.value("user").toString());
     ui->from_mail->setText(q.value("sender").toString());
     ui->comboBox->setCurrentText(q.value("sender").toString());

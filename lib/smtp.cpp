@@ -178,7 +178,7 @@ bool Smtp::sendmail(const QString from_address, QString to, QString cc, QString 
     {
         message = message + "Subject: " + subject + "\r\n";
         message = message + "MIME-Version: 1.0" + "\r\n";
-        message = message + "Content-Type: text/html;" + " charset=utf-8\r\n";
+        message = message + "Content-Type: text/html;" + " charset=utf-8\r\n\r\n";
         message = message + content;
     }
      docmd(message);

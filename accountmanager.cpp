@@ -1,6 +1,7 @@
     #include "accountmanager.h"
     #include "lib/pop3.h"
     #include "lib/smtp.h"
+#include <QDebug>
 
     AccountManager::AccountManager()
     {
@@ -34,7 +35,7 @@
                 validateSmtp(username, password, smtp_server, smtp_port)) {
             QSqlQuery query;
             query.exec(QString("UPDATE account SET password = '%1', pop_server = '%2', pop_port = %3,"
-                       "smtp_server = '%4', smtp_port = '%5' WHERE username = '%6'").arg(
+                       "smtp_server = '%4', smtp_port = '%5' WHERE username = %6").arg(
                            password, pop_server).arg(pop_port).arg(smtp_server).arg(smtp_port).arg(username));
             if (username == this->username) {
                 this->password = password;
@@ -53,9 +54,6 @@
         QSqlQuery query;
 
         query.exec(QString("DELETE FROM account WHERE username='%1';").arg(username));
-        query.next();
-        QString a = "jiayunpeide ::";
-        qDebug() << a << query.lastError();
         if (this->username == username) {
             query.exec("SELECT username, password, pop_server, pop_port, smtp_server, smtp_port FROM account;");
             query.next();
@@ -88,7 +86,7 @@
             valid = smtp.login(user,pass);
             return valid;
         }
-        return false;
+        return valid;
     }
 
     bool AccountManager::add(const QString &username, const QString &password,
@@ -98,7 +96,7 @@
                 validateSmtp(username, password, smtp_server, smtp_port)) {
             QSqlQuery query;
             query.exec(QString("INSERT INTO account (username, password, pop_server, pop_port,"
-                               "smtp_server, smtp_port) VALUES ('%1', '%2', '%3', %4, '%5', '%6');"
+                               "smtp_server, smtp_port) VALUES ('%1', '%2', '%3', %4, '%5', %6);"
                                ).arg(username, password, pop_server).arg(pop_port).arg(smtp_server).arg(smtp_port));
             query.exec(QString("INSERT INTO dir (user, folder) VALUES ('%1', 'Default');").arg(username));
             return true;

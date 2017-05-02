@@ -148,7 +148,6 @@ void MainWindow::show_rightmenu(const QPoint& pos)
     QString type,userName;
     QAbstractItemModel* m = (QAbstractItemModel*)current_index.model();
     unique_id = m->index(tableView_current_row,3).data().toString();
-    //QModelIndex type_index = m->index(tableView_current_row,4);//find the uid of selected mail
     type = m->index(tableView_current_row,4).data().toString();
     userName = m->index(tableView_current_row,5).data().toString();
     if(type == "inbox" || type == "folder")
@@ -179,8 +178,6 @@ void MainWindow::show_rightmenu(const QPoint& pos)
     {
         QMenu* rmenu = new QMenu(this);
         QAction* edit = rmenu->addAction("edit");
-        QAction* full_delete = rmenu->addAction("full delete");
-        connect(full_delete, SIGNAL(triggered(bool)), this, SLOT(Full_delete()));
         connect(edit, SIGNAL(triggered(bool)), this, SLOT(Edit()));
         rmenu->exec(QCursor::pos());
     }
@@ -204,19 +201,6 @@ void MainWindow::show_rightmenu(const QPoint& pos)
 
 void MainWindow::on_tableView_clicked(const QModelIndex &index)
 {
-    int row = index.row();
-    QAbstractItemModel* m = (QAbstractItemModel*)index.model();
-    unique_id = m->index(row,3).data().toString();
-    QSqlQuery q;
-    q.exec(QString("SELECT downloaded FROM receive_mail WHERE uid = '%1';").arg(unique_id));
-    if(q.value("downloaded").toInt() == 0)
-    {
-        Receive receive_body;
-        receive_body.receiveBody(unique_id);
-    }
-    q.exec(QString("SELECT body FROM receive_mail WHERE uid = '%1';").arg(unique_id));
-    ui->textBrowser->setText(q.value(0).toString());
-
     ui->actionDelete->setEnabled(true);
     QString type = update_index.data().toString();
     if(type== "Draft" || type == "Sent" || type == "Trash")
@@ -224,10 +208,37 @@ void MainWindow::on_tableView_clicked(const QModelIndex &index)
         ui->actionReply->setDisabled(true);
         ui->actionForward->setDisabled(true);
     }
-    else if(unique_id != "")
+    //else if(unique_id != "")
+    else
     {
         ui->actionForward->setEnabled(true);
         ui->actionReply->setEnabled(true);
+    }
+
+    QCoreApplication::processEvents();
+    int row = index.row();
+    QAbstractItemModel* m = (QAbstractItemModel*)index.model();
+    unique_id = m->index(row,3).data().toString();
+    if(type== "Draft" || type == "Sent")
+    {
+        QSqlQuery q;
+        q.exec(QString("SELECT body FROM send_mail WHERE uid = '%1';").arg(unique_id));
+        q.next();
+        ui->textBrowser->setText(q.value(0).toString());
+    }
+    else
+    {
+        QSqlQuery q;
+        q.exec(QString("SELECT downloaded FROM receive_mail WHERE uid = '%1';").arg(unique_id));
+        q.next();
+        if(q.value("downloaded").toInt() == 0)
+        {
+            Receive receive_body;
+            receive_body.receiveBody(unique_id);
+        }
+        q.exec(QString("SELECT body FROM receive_mail WHERE uid = '%1';").arg(unique_id));
+        q.next();
+        ui->textBrowser->setText(q.value(0).toString());
     }
 }
 

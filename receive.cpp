@@ -71,6 +71,7 @@ void Receive::receiveBody(const QString &uid) {
     QStringList::iterator it = list.begin();
     QString body;
     parser.parseBody(it, list.end(), body);
+    qDebug() << body;
     saveBody(uid, body);
     pop.quit(resp);
 }
@@ -137,7 +138,7 @@ void Parser::parseBody(QStringList::iterator &it, const QStringList::iterator &e
             boundary = match.captured(1);
         }
         if (it->contains("charset=")) {
-            QRegularExpression re("charset=\\S+");
+            QRegularExpression re("charset=(\\S+)");
             QRegularExpressionMatch match = re.match(*it);
             codec_name = match.captured(1);
         }

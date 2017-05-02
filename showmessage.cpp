@@ -117,6 +117,7 @@ bool showmessage::showTableview(QStandardItemModel* Table_model,const QModelInde
     }
     else if(indexName == "Inbox")
     {//show the information of inbox
+        QCoreApplication::processEvents();
         Receive receive_mail;
         receive_mail.receiveHeaders();
         q.exec(QString("SELECT deleted, sender, subject, date, uid FROM receive_mail WHERE user = '%1'").arg(rootIndexName));
