@@ -12,13 +12,11 @@ protected:
     QTextCodec* codec;
 public:
     DecodeStrategy(): codec(QTextCodec::codecForName("utf-8")) {}
-    virtual ~DecodeStrategy() { delete codec; }
+    virtual ~DecodeStrategy() {}
     virtual void setCodec(const QString &name) {
         QTextCodec *tmp = QTextCodec::codecForName(name.toUtf8());
-        if (tmp) {
-            delete codec;
+        if (tmp)
             codec = tmp;
-        }
     }
     virtual void decode(const QString &src, QString &to) {
         QByteArray tmp;
