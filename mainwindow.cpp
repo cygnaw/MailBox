@@ -41,7 +41,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);//can not edit
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);//can only select the hole row
     ui->tableView->setMaximumWidth(550);
-    //ui->tableView->setContextMenuPolicy(Qt::ActionsContextMenu);
     connect(this,SIGNAL(show_tree_info()),this,SLOT(show_treeview_info()));
     connect(ui->tableView, SIGNAL(customContextMenuRequested(const QPoint&)),this, SLOT(show_rightmenu(const QPoint&)));
     connect(ui->treeView, SIGNAL(customContextMenuRequested(const QPoint&)),this, SLOT(show_Tree_rightmenu(const QPoint&)));
@@ -130,7 +129,6 @@ void MainWindow::on_treeView_clicked(const QModelIndex &index)
     showmessage show_TableView;
     show_TableView.showTableview(Table_model,index);
     ui->tableView->setModel(Table_model);
-    //ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->tableView->setColumnHidden(3,true);
     ui->tableView->setColumnHidden(4,true);
     ui->tableView->setColumnHidden(5,true);
@@ -188,18 +186,142 @@ void MainWindow::show_rightmenu(const QPoint& pos)
         connect(full_delete, SIGNAL(triggered(bool)), this, SLOT(Full_delete()));
         rmenu->exec(QCursor::pos());
     }
-//    else
-//    {
-//        QMenu* rmenu = new QMenu(this);
-//        QAction* full_delete = rmenu->addAction("full delete");
-//        connect(full_delete, SIGNAL(triggered(bool)), this, SLOT(Full_delete()));
-//        QAction* Forward = rmenu->addAction("forward");
-//        connect(Forward, SIGNAL(triggered(bool)), this, SLOT(Forward()));
-//        rmenu->exec(QCursor::pos());
-//    }
 }
 
 void MainWindow::on_tableView_clicked(const QModelIndex &index)
+{
+    ui->actionDelete->setEnabled(true);
+    QString type = update_index.data().toString();
+    if(type== "Draft" || type == "Sent" || type == "Trash")
+    {
+        ui->actionReply->setDisabled(true);
+        ui->actionForward->setDisabled(true);
+    }
+    else
+    {
+        ui->actionForward->setEnabled(true);
+        ui->actionReply->setEnabled(true);
+    }
+    int row = index.row();
+    QAbstractItemModel* m = (QAbstractItemModel*)index.model();
+    unique_id = m->index(row,3).data().toString();
+}
+
+void MainWindow::on_treeView_collapsed()
+{
+    ui->tableView->setModel(NULL);
+    ui->textBrowser->clear();
+    unique_id = "";
+    ui->actionForward->setDisabled(true);
+    ui->actionReply->setDisabled(true);
+    ui->actionDelete->setDisabled(true);
+}
+
+void MainWindow::Reply()
+{
+    SendWindow *send = new SendWindow(this);
+    connect(this, SIGNAL(reply_mail(QString&,int)), send, SLOT(Replymail(QString&,int)));
+    send->show();
+    emit reply_mail(unique_id,1);
+}
+
+void MainWindow::on_actionReply_triggered()
+{
+    MainWindow::Reply();
+}
+
+void MainWindow::Forward()
+{
+    SendWindow *send = new SendWindow(this);
+    connect(this, SIGNAL(forward_mail(QString&,int)), send, SLOT(Replymail(QString&,int)));
+    send->show();
+    emit forward_mail(unique_id,2);
+}
+
+void MainWindow::on_actionForward_triggered()
+{
+        MainWindow::Forward();
+}
+
+void MainWindow::move_to_folder(QAction* action)
+{
+    if(action->text() != "new folder")
+    {
+        QSqlQuery query;
+        query.exec(QString("UPDATE receive_mail SET folder = '%1' WHERE uid = '%6'").arg(action->text()).arg(unique_id));
+        MainWindow::on_treeView_clicked(update_index);
+    }
+    else
+    {
+        NewFolder* newfolder = new NewFolder(this);
+        connect(this, SIGNAL(creat_newfolder(const QString&)), newfolder, SLOT(save_account(const QString&)));
+        QModelIndex account_index = update_index;
+        while((account_index.parent()).isValid())
+            account_index = account_index.parent();
+        emit creat_newfolder(account_index.data().toString());
+        if(newfolder->exec() == QDialog::Accepted)
+            show_treeview_info();
+    }
+}
+
+void MainWindow::Full_delete()
+{
+    QString type = update_index.data().toString();
+    if(type== "Draft" || type == "Sent")
+    {
+        QSqlQuery query;
+        query.exec(QString("DELETE FROM send_mail WHERE uid='%1'").arg(unique_id));
+    }
+    else
+    {
+        QSqlQuery query;
+        query.exec(QString("DELETE FROM receive_mail WHERE uid='%1'").arg(unique_id));
+    }
+    MainWindow::on_treeView_clicked(update_index);
+}
+
+void MainWindow::Delete()
+{
+    QString resp;
+    QStringList list;
+    int octets;
+    AccountManager &AM = AccountManager::getInstance();
+    Pop3 pop(AM.getPopServer(), AM.getPopPort());
+    pop.user(AM.getUser(), resp);
+    pop.pass(AM.getPass(), resp);
+    pop.uidl(resp, list, octets);
+    foreach (const QString &str, list) {
+        QStringList l = str.split(' ', QString::SkipEmptyParts);
+        if (l[1] == unique_id) {
+            pop.dele(l[0].toInt(), resp);
+            break;
+        }
+    }
+    pop.quit(resp);
+    QSqlQuery query;
+    query.exec(QString("UPDATE receive_mail SET deleted = '%1' WHERE uid='%2'").arg(1).arg(unique_id));
+    MainWindow::on_treeView_clicked(update_index);
+}
+
+void MainWindow::on_actionDelete_triggered()
+{
+    QString type = update_index.data().toString();
+    if(type== "Draft" || type == "Sent" || type == "Trash")
+        MainWindow::Full_delete();
+    else
+        MainWindow::Delete();
+}
+
+void MainWindow::Edit()
+{
+    SendWindow *send = new SendWindow(this);
+    connect(this, SIGNAL(edit_mail(QString&)), send, SLOT(Editmail(QString&)));
+    send->show();
+    emit edit_mail(unique_id);
+}
+
+
+void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 {
     ui->actionDelete->setEnabled(true);
     QString type = update_index.data().toString();
@@ -240,98 +362,4 @@ void MainWindow::on_tableView_clicked(const QModelIndex &index)
         q.next();
         ui->textBrowser->setText(q.value(0).toString());
     }
-}
-
-void MainWindow::on_treeView_collapsed()
-{
-    ui->tableView->setModel(NULL);
-    ui->textBrowser->clear();
-    unique_id = "";
-    ui->actionForward->setDisabled(true);
-    ui->actionReply->setDisabled(true);
-    ui->actionDelete->setDisabled(true);
-}
-
-void MainWindow::Reply()
-{
-    SendWindow *send = new SendWindow(this);
-    connect(this, SIGNAL(reply_mail(QString&,int)), send, SLOT(Replymail(QString&,int)));
-    send->show();
-    emit reply_mail(unique_id,1);
-}
-
-void MainWindow::on_actionReply_triggered()
-{
-        MainWindow::Reply();
-}
-
-void MainWindow::Forward()
-{
-    SendWindow *send = new SendWindow(this);
-    connect(this, SIGNAL(forward_mail(QString&,int)), send, SLOT(Replymail(QString&,int)));
-    send->show();
-    emit forward_mail(unique_id,2);
-}
-
-void MainWindow::on_actionForward_triggered()
-{
-        MainWindow::Forward();
-}
-
-void MainWindow::move_to_folder(QAction* action)
-{
-    if(action->text() != "new folder")
-    {
-        QSqlQuery query;
-        query.exec(QString("UPDATE receive_mail SET folder = '%1' WHERE uid = '%6'").arg(action->text()).arg(unique_id));
-        MainWindow::on_treeView_clicked(update_index);
-    }
-    else
-    {
-        NewFolder* newfolder = new NewFolder(this);
-        connect(this, SIGNAL(creat_newfolder(const QString&)), newfolder, SLOT(save_account(const QString&)));
-        QModelIndex account_index = update_index;
-        while((account_index.parent()).isValid())
-            account_index = account_index.parent();
-        emit creat_newfolder(account_index.data().toString());
-        if(newfolder->exec() == QDialog::Accepted)
-            show_treeview_info();
-    }
-}
-
-void MainWindow::Full_delete()
-{
-    QSqlQuery query;
-    query.exec(QString("DELETE FROM receive_mail WHERE uid='%1'").arg(unique_id));
-    MainWindow::on_treeView_clicked(update_index);
-}
-
-void MainWindow::Delete()
-{
-    QSqlQuery query;
-    query.exec(QString("UPDATE receive_mail SET deleted = '%1' WHERE uid='%2'").arg(1).arg(unique_id));
-    MainWindow::on_treeView_clicked(update_index);
-}
-
-void MainWindow::on_actionDelete_triggered()
-{
-    QString type = update_index.data().toString();
-    if(type== "Draft" || type == "Sent" || type == "Trash")
-        MainWindow::Full_delete();
-    else
-        MainWindow::Delete();
-}
-
-void MainWindow::Edit()
-{
-    SendWindow *send = new SendWindow(this);
-    connect(this, SIGNAL(edit_mail(QString&)), send, SLOT(Editmail(QString&)));
-    send->show();
-    emit edit_mail(unique_id);
-}
-
-
-void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
-{
-
 }

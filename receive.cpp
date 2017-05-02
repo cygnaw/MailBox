@@ -7,6 +7,8 @@
 #include <QRegularExpression>
 #include <QScopedPointer>
 #include <QLocale>
+#include <QProgressDialog>
+#include <QMessageBox>
 
 
 void Receive::receiveHeaders() {
@@ -32,7 +34,17 @@ void Receive::receiveHeaders() {
     pop.pass(pass, resp);
 
     pop.uidl(resp, list, octets);
-    foreach (const QString &it, list) {
+    int total = list.length();
+
+    QProgressDialog dialog;
+    dialog.setWindowTitle("Receiving...");
+    dialog.setRange(0, total);
+    dialog.setFixedWidth(300);
+    dialog.setFixedHeight(100);
+    dialog.show();
+
+    for (int i = 0; i < total; ++i) {
+        const QString &it = list[i];
         QStringList l = it.split(' ', QString::SkipEmptyParts);
         if (!set.contains(l[1])) {
             Email mail;
@@ -45,9 +57,14 @@ void Receive::receiveHeaders() {
             parser.parseHeader(it, list.end(), mail);
             saveHeader(mail);
         }
+        QCoreApplication::processEvents();
+        dialog.setValue(i+1);
     }
 
     pop.quit(resp);
+    QMessageBox mb;
+    mb.setText("Receive successfully!");
+    mb.exec();
 
 }
 
@@ -90,10 +107,12 @@ void Receive::saveHeader(const Email &mail) {
 
 void Receive::saveBody(const QString &uid, const QString &body) {
     QSqlQuery query;
-    QString s = QString("UPDATE receive_mail "
-                        "SET downloaded = 1, body = '%1'"
-                        "WHERE uid = '%2'").arg(body, uid);
-    query.exec(s);
+    query.prepare("UPDATE receive_mail "
+                  "SET downloaded = 1, body = :body "
+                  "WHERE uid = :uid;");
+    query.bindValue(":body", body);
+    query.bindValue(":uid", uid);
+    query.exec();
     qDebug() << query.lastError();
 }
 

@@ -77,10 +77,10 @@ void SendWindow::on_sendbutton_clicked()
     int number = ui->attachment->count();
     if(number)
         file = new QFile(ui->attachment->item(0)->text().toUtf8());
-    if(is_reply_or_forward == 1 || is_reply_or_forward == 2)
-    {
-        content = content + reply_forward_message;
-    }
+//    if(is_reply_or_forward == 1 || is_reply_or_forward == 2)
+//    {
+//        content = content + reply_forward_message;
+//    }
     process_bar.show_processbar(40,50,process);
     if(!smtp.sendmail(username,To,Cc,Bcc,subject,content,file,number))
     {
@@ -118,14 +118,6 @@ void SendWindow::on_comboBox_currentIndexChanged(const QString &arg1)
 {
     ui->from_mail->setText(arg1);
     SendWindow::get_currentAccount(arg1);
-//    AccountManager &accountManager = AccountManager::getInstance();
-//    accountManager.change(arg1);
-//    username = accountManager.getUser();
-//    password = accountManager.getPass();
-//    smtp_server = accountManager.getSmtpServer();
-//    smtp_port = accountManager.getSmtpPort();
-//    pop_server = accountManager.getPopServer();
-//    pop_port = accountManager.getPopPort();
 }
 
 void SendWindow::on_savebutton_clicked()
@@ -165,13 +157,12 @@ void SendWindow::Replymail(QString& unique_id, int flag)
     SendWindow::get_currentAccount(q.value("user").toString());
     is_reply_or_forward = flag;
     reply_forward_message = QString("<br><br><br><br>---------------------------------------") +
-                    QString("<br>From:&nbsp") + q.value("sender").toString() +
-                    QString("<br>Date:&nbsp") + q.value("date").toString() +
-                    QString("<br>To:&nbsp") + q.value("receiver").toString() +
-                    QString("<br>Subject:&nbsp") + q.value("subject").toString() +
-                    QString("<br><br><br>") + q.value("body").toString() +
-                    QString("<br><br>---------------------------------------");
-    //ui->content->setText(reply_forward_message);
+                    QString("<br>From:&nbsp;") + q.value("sender").toString() +
+                    QString("<br>Date:&nbsp;") + q.value("date").toString() +
+                    QString("<br>To:&nbsp;") + q.value("receiver").toString() +
+                    QString("<br>Subject:&nbsp;") + q.value("subject").toString() +
+                    QString("<br><br><br>") + q.value("body").toString();
+    ui->content->setText(reply_forward_message);
     //ui->content->setHtml(reply_forward_message);
 }
 

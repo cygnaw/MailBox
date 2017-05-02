@@ -123,10 +123,6 @@ bool Smtp::sendmail(const QString from_address, QString to, QString cc, QString 
     if(responseCode != 354)
         return false;
     QString message;
-    //message = "From: <" + sender + ">\r\n";
-    //message = message + "To: <" + address + ">\r\n";
-    //message = message + "Subject: " + subject + "\r\n\r\n";
-
     /* ----sender / from---- */
     message = "From: <" + from_address + ">\r\n";
 
