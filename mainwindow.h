@@ -71,6 +71,8 @@ private slots:
 
     void on_tableView_doubleClicked(const QModelIndex &index);
 
+    void on_action_triggered();
+
 private:
     Ui::MainWindow *ui;
     QStandardItemModel* Tree_model = NULL;

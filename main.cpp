@@ -29,8 +29,8 @@ int main(int argc, char *argv[])
     initDb();
     /////////////////////////////////////////////////////
 //    AccountManager::add("kaijietang@sina.cn","guessmypwd","pop.sina.cn",110,"smtp.sina.cn",25);
-    AccountManager::add("peiyunjia@sina.com","jia123","pop.sina.com",110,"smtp.sina.com",25);
-    AccountManager::add("taylover_pei@163.com","jia123","pop.163.com",110,"smtp.163.com",25);
+//    AccountManager::add("peiyunjia@sina.com","jia123","pop.sina.com",110,"smtp.sina.com",25);
+//    AccountManager::add("taylover_pei@163.com","jia123","pop.163.com",110,"smtp.163.com",25);
 //    QSqlQuery q;
 //    q.exec(QString("INSERT INTO send_mail (user, sended, sender, receiver, date, subject, body)"
 //                   "VALUES ('peiyunjia@sina.com', 1, 'peiyunjia@sina.com', 'taylover_pei@163.com', '04-26', 'ceshi1', 'jiayunpei');"));

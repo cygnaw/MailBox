@@ -94,10 +94,23 @@ void SendWindow::on_sendbutton_clicked()
         QDateTime* time = new QDateTime;
         QString localtime = time->currentDateTime().toString("MM-dd hh:mm");
         QSqlQuery q;
-        content = ui->content->toPlainText();
-        q.exec(QString("INSERT INTO send_mail (user, sended, sender, receiver, cc, bcc, date, subject, body)"
-                       "VALUES ('%1', '%2', '%3', '%4', '%5', '%6', '%7', '%8', '%9');"
-                       ).arg(username).arg(1).arg(username, To, Cc, Bcc, localtime, subject, content));
+        q.prepare("INSERT INTO send_mail (user, sended, sender, receiver, cc, bcc, date, subject, body)"
+                  "VALUES (:user, :sended, :sender, :receiver, :cc, :bcc, :date, :subject, :body);");
+        q.bindValue(":user", username);
+        q.bindValue(":sended", 1);
+        q.bindValue(":sender", username);
+        q.bindValue(":receiver", To );
+        q.bindValue(":cc", Cc);
+        q.bindValue(":bcc", Bcc);
+        q.bindValue(":date", localtime);
+        q.bindValue(":subject", subject);
+        q.bindValue(":body", content);
+        q.exec();
+        qDebug() << q.lastError();
+//        //content = ui->content->toPlainText();
+//        q.exec(QString("INSERT INTO send_mail (user, sended, sender, receiver, cc, bcc, date, subject, body)"
+//                       "VALUES ('%1', '%2', '%3', '%4', '%5', '%6', '%7', '%8', '%9');"
+//                       ).arg(username).arg(1).arg(username, To, Cc, Bcc, localtime, subject, content));
         process_bar.show_processbar(50,100,process);
         QMessageBox warning;
         warning.setText("Message sent successfully!");
@@ -126,13 +139,23 @@ void SendWindow::on_savebutton_clicked()
     QString Cc = ui->CC->text().trimmed();
     QString Bcc = ui->BCC->text().trimmed();
     QString subject = ui->subject->text();
-    QString content = ui->content->toPlainText();
+    QString content = ui->content->toHtml();
     QDateTime* time = new QDateTime;
     QString localtime = time->currentDateTime().toString("MM-dd hh:mm");
     QSqlQuery q;
-    q.exec(QString("INSERT INTO send_mail (user, sended, sender, receiver, cc, bcc, date, subject, body)"
-                   "VALUES ('%1', '%2', '%3', '%4', '%5', '%6', '%7', '%8', '%9');"
-                   ).arg(username).arg(0).arg(username, To, Cc, Bcc, localtime, subject, content));
+    q.prepare("INSERT INTO send_mail (user, sended, sender, receiver, cc, bcc, date, subject, body)"
+              "VALUES (:user, :sended, :sender, :receiver, :cc, :bcc, :date, :subject, :body);");
+    q.bindValue(":user", username);
+    q.bindValue(":sended", 0);
+    q.bindValue(":sender", username);
+    q.bindValue(":receiver", To );
+    q.bindValue(":cc", Cc);
+    q.bindValue(":bcc", Bcc);
+    q.bindValue(":date", localtime);
+    q.bindValue(":subject", subject);
+    q.bindValue(":body", content);
+    q.exec();
+    qDebug() << q.lastError();
     QMessageBox warning;
     warning.setText("Save successfully!");
     warning.exec();

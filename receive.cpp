@@ -97,12 +97,17 @@ void Receive::receiveBody(const QString &uid) {
 void Receive::saveHeader(const Email &mail) {
     QSqlQuery query;
     QString user = AccountManager::getInstance().getUser();
-    QString s = QString("INSERT INTO receive_mail ( "
-                        "uid, user, sender, receiver, cc, subject, date) "
-                        "values ('%1', '%2', '%3', '%4', '%5', '%6', '%7');").arg(
-                            mail.uid, user, mail.from, mail.to,
-                            mail.cc, mail.subject, mail.date);
-    query.exec(s);
+    query.prepare("INSERT INTO receive_mail ( "
+                  "uid, user, sender, receiver, cc, subject, date) VALUES "
+                  "(:uid, :user, :sender, :receiver, :cc, :subject, :date);");
+    query.bindValue(":uid", mail.uid);
+    query.bindValue(":user", user);
+    query.bindValue(":sender", mail.from);
+    query.bindValue(":receiver", mail.to);
+    query.bindValue(":cc", mail.cc);
+    query.bindValue(":subject", mail.subject);
+    query.bindValue(":date", mail.date);
+    query.exec();
 }
 
 void Receive::saveBody(const QString &uid, const QString &body) {
@@ -113,7 +118,6 @@ void Receive::saveBody(const QString &uid, const QString &body) {
     query.bindValue(":body", body);
     query.bindValue(":uid", uid);
     query.exec();
-    qDebug() << query.lastError();
 }
 
 void Parser::parseHeader(QStringList::iterator &it,

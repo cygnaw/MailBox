@@ -5,10 +5,15 @@
 
 QSqlError initDb() {
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName(":memory:");
+    db.setDatabaseName("data.db");
 
     if (!db.open())
         return db.lastError();
+
+    QSqlQuery q;
+    // open foreign key constraint
+    if (!q.exec(QLatin1String("PRAGMA foreign_keys = ON;")))
+        return q.lastError();
 
     QStringList tables = db.tables();
     if (tables.contains("account", Qt::CaseInsensitive) &&
@@ -17,10 +22,6 @@ QSqlError initDb() {
             tables.contains("receive_mail", Qt::CaseInsensitive))
         return QSqlError();
 
-    QSqlQuery q;
-    // open foreign key constraint
-    if (!q.exec(QLatin1String("PRAGMA foreign_keys = ON;")))
-        return q.lastError();
     // create table account
     if (!q.exec(QLatin1String("create table if not exists account("
                               "username     text primary key    not null unique,"

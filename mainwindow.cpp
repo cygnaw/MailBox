@@ -363,3 +363,10 @@ void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
         ui->textBrowser->setText(q.value(0).toString());
     }
 }
+
+void MainWindow::on_action_triggered()
+{
+    QMessageBox r;
+    r.setText("      copyright(c) 2017 MailBox \n\nMade by Yunpei Jia and Yichuan Wang");
+    r.exec();
+}
